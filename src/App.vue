@@ -15,17 +15,19 @@
               </div>
               <div class="dContent" >
                 <div class="doing-item" v-for="item in todolist" :key="item.id">
-                  <ul id="todolist">
+                  <div v-if="!item.done">
+                    <ul id="todolist">
                     <li  class='dlist todolist'>
                  <input type='checkbox' @change="updatedone(item.id,true)" class='choose-box'> 
                  <!-- //通过onchange事件，当复选框值有改变，调用update函数，并改变输入数据“done”属性的布尔值 -->
                  <span :id="'sp-'+item.id" @click="edit(item.id)">{{item.todo}}</span> 
                  <!-- //点击事项调用edit函数 -->
                  <input type="text"  :id="'input-' + item.id" v-model="item.todo" style='display:none' @keyup.enter="confirm(item.id)" @blur="confirm(item.id)">
-                 <a @click="remove()">-</a>
+                 <a @click="remove(item.id)">-</a>
                  <!-- //点击“-”，调用remove函数 -->
                  </li>
                   </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -43,7 +45,7 @@
                  <input type='checkbox' @change="updatedone(item.id,false)" class='choose-box' checked> 
                  <!-- //通过onchange事件，当复选框值有改变，调用update函数，并改变输入数据“done”属性的布尔值 -->
                  <span :id="'sp-' + item.id">{{item.todo}}</span> 
-                 <a @click="remove()">-</a>
+                 <a @click="remove(item.id)">-</a>
                  <!-- //点击“-”，调用remove函数 -->
                  </li>
                 </ul>
@@ -66,11 +68,12 @@ export default {
   name: 'App',
   data() {
     return {
-      todolist: []
+      todolist: [],
+      init: true
     }
   },
     mounted() {
-    this.load(); //页面加载完毕调用load函数
+      this.load(); //页面加载完毕调用load函数
   },
   methods: {
     addTodolist() {
@@ -121,19 +124,26 @@ export default {
 
       else {
         console.log('getlist null');
-        this.todolist = [
+        if(this.init) {
+          this.todolist = [
           {
           id: this.randomID(),
           todo: "设置你的todo清单!",   //存储用户输入的数据
           done: false     //确认是否被checked
           },
           {
-          id: this.randomID(),
+          id: this.randomID()+1,
           todo: "点击此处可以直接修改!",   //存储用户输入的数据
           done: false     //确认是否被checked
           }
         ]
         console.log('init todo');
+        this.init = false;
+        }
+        else {
+          todo = "";
+          done = "";
+        }
       }
 
     },
@@ -179,10 +189,10 @@ export default {
     },
 
     updatetodo(i, value) {
-      var id = this.todolist.findIndex(todolist => {
-        if(todolist.id == i) {
+      var id = this.todolist.map(item => {
+        if(item.id == i) {
 					console.log('updatetodo');
-          this.todolist.todo = value// 将第 i 个元素中的 todo 属性 改为 value 值
+          item.todo = value// 将第 i 个元素中的 todo 属性 改为 value 值
 				}
       });
       
@@ -191,23 +201,25 @@ export default {
     },
 
     updatedone(i, value) {
-      var id = this.todolist.findIndex(todolist => {
-        if(todolist.id == i) {
+      var id = this.todolist.map(item => {
+        if(item.id == i) {
 					console.log('updatedone');
-          this.todolist.done = value// 将第 i 个元素中的 done 属性 改为 value 值
+         item.done = value;// 将第 i 个元素中的 done 属性 改为 value 值
 				}
       });
       
+      console.log(id);
       this.saveData(this.todolist); // 覆盖原本地缓存
       this.load(); // 重新加载一次
     },
 
     remove(i) {
-      var id = this.todolist.findIndex(todolist => {
-        if(todolist.id == i) {
-								todolist.splice(id, 1); // 删除位于 id 的 1 个元素
-							}
-      });
+      var index = this.todolist.findIndex(item =>{
+        if(item.id==i){
+          return true
+        }
+      })
+      this.todolist.splice(index,1)
       this.saveData(this.todolist); // 覆盖原本地缓存
       this.load(); // 重新加载一次
     },
@@ -229,8 +241,11 @@ export default {
       return id1
     },
 
-  }
 
+  },
+
+  filters: {
+  }
   
 
 }
